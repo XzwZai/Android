@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">EditTool1</string>
+    <string name="title_activity_edit_text">EditTextActivity</string>
+</resources>
