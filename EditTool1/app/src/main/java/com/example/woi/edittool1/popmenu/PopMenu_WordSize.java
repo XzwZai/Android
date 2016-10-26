@@ -2,6 +2,7 @@ package com.example.woi.edittool1.popmenu;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,28 +18,53 @@ import android.widget.TextView;
 import com.example.woi.edittool1.EditTextActivity;
 import com.example.woi.edittool1.R;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class PopMenu_WordSize extends PopupWindow {
     private Button btn_add,btn_less,btn_bgcolor,btn_wordcolor;
     private View mMenuView;
     private SeekBar seekbar_size;
     private TextView word_size;
-    private PopMenu_Color popMenu_color;
+    EditTextActivity editTextActivity;
+    Activity context;
+    Map mapcolor = new HashMap();
     public PopMenu_WordSize(final Activity context, final EditText editText, final int size, final EditTextActivity editTextActivity) {
         super(context);
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.editTextActivity = editTextActivity;
+        this.context = context;
+        mapcolor.put(R.id.black, Color.rgb(0,0,0));
+        mapcolor.put(R.id.blue,Color.rgb(0,0,0xff));
+        mapcolor.put(R.id.red,Color.rgb(0xff,0,0));
+        mapcolor.put(R.id.yellow,Color.rgb(0xff,0xff,0));
+        mapcolor.put(R.id.green,Color.rgb(0,0xff,0));
+        mapcolor.put(R.id.white,Color.rgb(0xff,0xff,0xff));
+        mapcolor.put(R.id.gray,Color.rgb(0x6,0x6,0x6));
+        mapcolor.put(R.id.purple,Color.rgb(0xff,0x34,0xb3));
+        mapcolor.put(R.id.brown,Color.rgb(0xcd,0x66,0x1d));
+        mapcolor.put(R.id.lightblue,Color.rgb(0x63,0xb8,0xff));
         mMenuView = inflater.inflate(R.layout.word_type, null);
         btn_add = (Button) mMenuView.findViewById(R.id.add_size);
         btn_less = (Button) mMenuView.findViewById(R.id.less_size);
-        btn_bgcolor = (Button) mMenuView.findViewById(R.id.choose_bgcolor);
-        btn_wordcolor = (Button) mMenuView.findViewById(R.id.choose_wordcolor);
         seekbar_size = (SeekBar) mMenuView.findViewById(R.id.seekbar_size);
         word_size = (TextView) mMenuView.findViewById(R.id.word_size);
 
         seekbar_size.setProgress((size-15)*2);
         word_size.setText(size+"");
         //设置按钮监听
+        mMenuView.findViewById(R.id.black).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.blue).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.red).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.yellow).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.green).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.white).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.gray).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.purple).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.brown).setOnClickListener(choosecolor);
+        mMenuView.findViewById(R.id.lightblue).setOnClickListener(choosecolor);
         seekbar_size.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -68,8 +94,6 @@ public class PopMenu_WordSize extends PopupWindow {
                     seekbar_size.setProgress((num-15)*2);
                 }
                 word_size.setText(num + "");
-//                editText.setTextSize(num);
-//                seekbar_size.setProgress(num);
                 editTextActivity.setSize(num);
             }
         });
@@ -88,24 +112,10 @@ public class PopMenu_WordSize extends PopupWindow {
                 editTextActivity.setSize(num);
             }
         });
-        btn_bgcolor.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popMenu_color = new PopMenu_Color(context,editText,1,editTextActivity);
-                popMenu_color.showAtLocation(context.findViewById(R.id.activity_edit), Gravity.BOTTOM | Gravity.CENTER,0,0);
-            }
-        });
-        btn_wordcolor.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popMenu_color = new PopMenu_Color(context,editText,0,editTextActivity);
-                popMenu_color.showAtLocation(context.findViewById(R.id.activity_edit), Gravity.BOTTOM | Gravity.CENTER,0,0);
-            }
-        });
         //设置SelectPicPopupWindow的View
         this.setContentView(mMenuView);
         //设置SelectPicPopupWindow弹出窗体的宽
-        this.setWidth(ViewGroup.LayoutParams.FILL_PARENT);
+        this.setWidth(ViewGroup.LayoutParams.WRAP_CONTENT);
         //设置SelectPicPopupWindow弹出窗体的高
         this.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         //设置SelectPicPopupWindow弹出窗体可点击
@@ -133,4 +143,12 @@ public class PopMenu_WordSize extends PopupWindow {
         });
 
     }
+    View.OnClickListener choosecolor = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            int id = view.getId();
+            int color = (int)mapcolor.get(id);
+            editTextActivity.setWordColor(color);
+        }
+    } ;
 }

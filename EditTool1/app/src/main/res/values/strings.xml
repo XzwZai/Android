@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">EditTool1</string>
     <string name="title_activity_edit_text">EditTextActivity</string>
+    <string name="right">&#60;</string>
 </resources>

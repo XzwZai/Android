@@ -4,23 +4,58 @@
     android:id="@+id/activity_edit"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
     android:orientation="vertical"
-    android:background="@drawable/girl"
+    android:background="@drawable/bj1"
+    android:fitsSystemWindows="true"
+    android:clipToPadding="true"
     tools:context="com.example.woi.edittool1.EditTextActivity">
-
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/edit_tool"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:paddingRight="10dp"
+        android:background="@color/colorcyan"
+        android:backgroundTint="@color/colorcyan">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <Button
+                android:id="@+id/Btn_Back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:text="返回"
+                android:textSize="16dp"
+                android:textColor="#444"
+                android:background="@android:color/transparent"
+                android:onClick="back"/>
+            <Button
+                android:id="@+id/Btn_Save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="保存"
+                android:textSize="16dp"
+                android:textColor="#444"
+                android:background="@android:color/transparent"
+                android:onClick="saveedit"
+                android:layout_alignParentRight="true"/>
+        </RelativeLayout>
+    </android.support.v7.widget.Toolbar>
     <LinearLayout
         android:id="@+id/content"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+
         android:orientation="vertical">
         <EditText
             android:id="@+id/edit_all"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:hint="dhsajhdk"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:hint="Yours.."
             android:gravity="top"
             android:scrollbars="vertical"
             android:focusable="true"
@@ -30,49 +65,12 @@
             android:background="@null"
             android:singleLine="false">
         </EditText>
+        <android.support.v4.view.ViewPager
+            android:id="@+id/ViewPager_btns"
+            android:layout_width="match_parent"
+            android:layout_height="40dp">
+        </android.support.v4.view.ViewPager>
 
-        <LinearLayout
-            android:id="@+id/choose"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/Btn_Picture"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="tu"
-                android:onClick="choosepicture"/>
-            <Button
-                android:id="@+id/Btn_Camera"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Cam"
-                android:onClick="dispatchTakePictureIntent"/>
-            <Button
-                android:id="@+id/Btn_Word"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="A"
-                android:onClick="choosewordtype"/>
-            <Button
-                android:id="@+id/Btn_Save"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="save"
-                android:onClick="saveedit"/>
-            <Button
-                android:id="@+id/Btn_Tag"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Tag"
-                android:onClick="addTag"/>
-        </LinearLayout>
     </LinearLayout>
 
 

@@ -23,7 +23,7 @@
             android:windowSoftInputMode="adjustResize"
             android:label="@string/title_activity_edit_text"
             android:parentActivityName=".StartEditActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppBaseTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.woi.edittool1.StartEditActivity" />

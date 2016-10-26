@@ -5,8 +5,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -16,16 +19,21 @@ import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.print.PrintAttributes;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -35,14 +43,20 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.MaskFilterSpan;
+import android.text.style.StrikethroughSpan;
+import android.text.style.StyleSpan;
+import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,6 +65,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.woi.edittool1.popmenu.PopMenu_AddTag;
+import com.example.woi.edittool1.popmenu.PopMenu_Background;
 import com.example.woi.edittool1.popmenu.PopMenu_WordSize;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -64,9 +79,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 
 public class EditTextActivity extends AppCompatActivity {
@@ -75,21 +95,27 @@ public class EditTextActivity extends AppCompatActivity {
     static final int REQUEST_EXTERNAL_STORAGE = 3;
     String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE };
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
     static float mInsertedImgWidth;
     float x = 0, y = 0, x1, y1;
     String mCurrentPhotoPath;
+
     RecordFile recordFile = new RecordFile();
-    PopMenu_WordSize popMenu_wordSize;
-    PopMenu_AddTag popMenu_AddTag;
     TextWatcher textWatcher;
     EditText edit;
-    Button[] btns;
     LinearLayout layout;
+    private View buttons1,buttons2;
+    private ArrayList<View> pagelist;
+    private ViewPager viewPager;
+
     Uri imageUri;
-    Bitmap bitmap,bitmaphalf = null;
+    Bitmap bitmap, bitmaphalf = null;
     int wordsize = 20;
-    int wordcolor = Color.BLACK, bgcolor;
+    int wordcolor = Color.BLACK;
+    int underline = 0;
+    int strikethrough = 0;
+    int bold = 0;
+    int italic = 0;
     String local_file;
     int softinputheight = 0;
     int screenwidth = 0;
@@ -98,21 +124,51 @@ public class EditTextActivity extends AppCompatActivity {
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    //private GoogleApiClient client;
+    private GoogleApiClient client;
 
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    //private GoogleApiClient client;
     public EditTextActivity() {
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_text);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window window = getWindow();
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS
+                    | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+            Toolbar toolbar = (Toolbar) findViewById(R.id.edit_tool);
+            Drawable drawable = toolbar.getBackground();
+            toolbar.getBackgroundTintList();
+            ColorDrawable colorDrawable = (ColorDrawable) drawable;
+            int color = colorDrawable.getColor();
+
+            window.setStatusBarColor(color);
+        }
+
+
+
         Bundle bundle = this.getIntent().getExtras();
         local_file = bundle.getString(StartEditActivity.SAVE_PATH);
         init();
+
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         //client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
 
@@ -121,17 +177,14 @@ public class EditTextActivity extends AppCompatActivity {
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics);
     }
 
-
-
-    private Bitmap drawableToBitamp(Drawable drawable)
-    {
+    private Bitmap drawableToBitamp(Drawable drawable) {
         Bitmap bitmap;
         int w = drawable.getIntrinsicWidth();
         int h = drawable.getIntrinsicHeight();
         Bitmap.Config config =
                 drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
                         : Bitmap.Config.RGB_565;
-        bitmap = Bitmap.createBitmap(w,h,config);
+        bitmap = Bitmap.createBitmap(w, h, config);
         //注意，下面三行代码要用到，否在在View或者surfaceview里的canvas.drawBitmap会看不到图
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, w, h);
@@ -155,6 +208,36 @@ public class EditTextActivity extends AppCompatActivity {
         }
         layout = (LinearLayout) findViewById(R.id.activity_edit);
         layout.getBackground().setAlpha(77);
+        final LayoutInflater inflater = getLayoutInflater();
+        buttons1 = inflater.inflate(R.layout.buttons1,null);
+        buttons2 = inflater.inflate(R.layout.buttons2,null);
+        pagelist = new ArrayList<View>();
+        pagelist.add(buttons1);
+        pagelist.add(buttons2);
+        viewPager = (ViewPager) findViewById(R.id.ViewPager_btns);
+
+        viewPager.setAdapter(new PagerAdapter() {
+            @Override
+            public int getCount() {
+                return pagelist.size();
+            }
+
+            @Override
+            public boolean isViewFromObject(View view, Object object) {
+                return view == object;
+            }
+
+            @Override
+            public void destroyItem(ViewGroup container,int position,Object object) {
+                container.removeView(pagelist.get(position));
+            }
+
+            @Override
+            public Object instantiateItem(ViewGroup container, int position) {
+                container.addView(pagelist.get(position), 0);
+                return pagelist.get(position);
+            }
+        });
         bitmap = drawableToBitamp(layout.getBackground());
         layout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -170,27 +253,21 @@ public class EditTextActivity extends AppCompatActivity {
                     screenheight = r.bottom;
                 }
                 softinputheight = screenheight - r.bottom;
-                if(softinputheight >= screenheight/3) {
-                    if(bitmaphalf == null) {
-                        Matrix mx = new Matrix();
-                        mx.postScale(1,1);
-                        bitmaphalf = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight()*r.bottom/screenheight,mx,true);
-                    }
-                    Drawable d = new BitmapDrawable(bitmaphalf);
-                    layout.setBackground(d);
-                }
-                else {
-                    Drawable d = new BitmapDrawable(bitmap);
-                    layout.setBackground(d);
-                }
+//                if (softinputheight >= screenheight / 3) {
+//                    if (bitmaphalf == null) {
+//                        Matrix mx = new Matrix();
+//                        mx.postScale(1, 1);
+//                        bitmaphalf = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight() * r.bottom / screenheight, mx, true);
+//                    }
+//                    Drawable d = new BitmapDrawable(bitmaphalf);
+//                    layout.setBackground(d);
+//                } else {
+//                    Drawable d = new BitmapDrawable(bitmap);
+//                    layout.setBackground(d);
+//                }
             }
         });
         edit = (EditText) findViewById(R.id.edit_all);
-        btns = new Button[4];
-        btns[0] = (Button) findViewById(R.id.Btn_Picture);
-        btns[1] = (Button) findViewById(R.id.Btn_Camera);
-        btns[2] = (Button) findViewById(R.id.Btn_Word);
-        btns[3] = (Button) findViewById(R.id.Btn_Save);
         ViewTreeObserver vto = edit.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -227,16 +304,30 @@ public class EditTextActivity extends AppCompatActivity {
                         type = 2;
                     }
 
-                    //ss.setSpan(new MaskFilterSpan(new BlurMaskFilter(3, BlurMaskFilter.Blur.OUTER)), 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    //ss.setSpan(new MaskFilterSpan(new EmbossMaskFilter(new float[]{1,1,3}, 1.5f, 8, 3)), 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                     ss.setSpan(new ForegroundColorSpan(wordcolor), 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     ss.setSpan(new AbsoluteSizeSpan(wordsize, true), 0, count, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    //edit.append(ss);
+                    if(underline == 1) {
+                        ss.setSpan(new UnderlineSpan(), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if(strikethrough == 1) {
+                        ss.setSpan(new StrikethroughSpan(), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if(bold == 1 && italic == 1) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD_ITALIC), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else if(bold == 1 && italic == 0) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else if(bold == 0 && italic == 1) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC), 0, count, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+
                     edit.getText().insert(edit.getSelectionStart(), ss);
                     edit.addTextChangedListener(this);
 
                     for (int i = 0; i < count; i++) {
-                        recordFile.addContent(start + i, type, s.toString().charAt(start + i), wordsize, wordcolor);
+                        recordFile.addContent(start + i, type, s.toString().charAt(start + i), wordsize, wordcolor,underline+10*strikethrough+100*bold+1000*italic);
                     }
                 }
             }
@@ -280,6 +371,10 @@ public class EditTextActivity extends AppCompatActivity {
                 return false;
             }
         });
+        edit.setFocusable(false);
+        layout.requestFocus();
+
+
     }
 
     /**
@@ -330,24 +425,92 @@ public class EditTextActivity extends AppCompatActivity {
             wordsize = recordFile.getstyle(loc - 1)[2];
             wordcolor = recordFile.getstyle(loc - 1)[1];
         }
-
-        popMenu_wordSize = new PopMenu_WordSize(EditTextActivity.this, edit, wordsize, this);
+        PopMenu_WordSize popMenu_wordSize = new PopMenu_WordSize(EditTextActivity.this, edit, wordsize, this);
         LinearLayout layout = (LinearLayout) findViewById(R.id.activity_edit);
         edit.setFocusable(false);
         layout.requestFocus();
         InputMethodManager im = (InputMethodManager) edit.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         im.hideSoftInputFromWindow(edit.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+
+
+        Button word_size = (Button) findViewById(R.id.Btn_Word);
+        int bottom = word_size.getBottom();
         popMenu_wordSize.showAtLocation(EditTextActivity.this.findViewById(R.id.activity_edit), Gravity.BOTTOM | Gravity.CENTER, 0, 0);
+    }
+
+    public void chooseBG(View view) {
+        PopMenu_Background popMenu_background = new PopMenu_Background(EditTextActivity.this, this);
+        LinearLayout layout = (LinearLayout) findViewById(R.id.activity_edit);
+        edit.setFocusable(false);
+        layout.requestFocus();
+        InputMethodManager im = (InputMethodManager) edit.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        im.hideSoftInputFromWindow(edit.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        popMenu_background.showAtLocation(EditTextActivity.this.findViewById(R.id.activity_edit), Gravity.BOTTOM | Gravity.CENTER, 0, 0);
+
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void specialword(View view) {
+        switch (view.getId()) {
+            case R.id.Btn_underline:
+                if(underline == 1) {
+                    underline = 0;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colorcyan)));
+                }
+                else{
+                    underline = 1;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colordarkcyan)));
+                }
+                break;
+            case R.id.Btn_strikethrough:
+                if(strikethrough == 1) {
+                    strikethrough = 0;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colorcyan)));
+                }
+                else{
+                    strikethrough = 1;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colordarkcyan)));
+                }
+                break;
+            case R.id.Btn_bold:
+                if(bold == 1) {
+                    bold = 0;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colorcyan)));
+                }
+                else{
+                    bold = 1;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colordarkcyan)));
+                }
+                break;
+            case R.id.Btn_italic:
+                if(italic == 1) {
+                    italic = 0;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colorcyan)));
+                }
+                else{
+                    italic = 1;
+                    view.setBackground(new ColorDrawable(getResources().getColor(R.color.colordarkcyan)));
+                }
+                break;
+        }
+    }
+
+    public void gotoleorri(View view) {
+        if(view.getId() == R.id.Btn_GotoLeft) {
+            viewPager.setCurrentItem(viewPager.getCurrentItem()+1);
+        }
+        else if(view.getId() == R.id.Btn_GotoRight) {
+            viewPager.setCurrentItem(viewPager.getCurrentItem()-1);
+        }
     }
 
 
     /**
-     *
      * @param view
      */
     public void addTag(View view) {
-
-        popMenu_AddTag = new PopMenu_AddTag(EditTextActivity.this, recordFile);
+        PopMenu_AddTag popMenu_AddTag = new PopMenu_AddTag(EditTextActivity.this, recordFile);
         LinearLayout layout = (LinearLayout) findViewById(R.id.activity_edit);
         edit.setFocusable(false);
         layout.requestFocus();
@@ -355,9 +518,6 @@ public class EditTextActivity extends AppCompatActivity {
         im.hideSoftInputFromWindow(edit.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         popMenu_AddTag.showAtLocation(EditTextActivity.this.findViewById(R.id.activity_edit), Gravity.BOTTOM | Gravity.CENTER, 0, 0);
     }
-
-
-
 
 
     /**
@@ -377,6 +537,9 @@ public class EditTextActivity extends AppCompatActivity {
 
     }
 
+    public void back(View view) {
+        onBackPressed();
+    }
 
     /**
      * 将图片添加到edittext
@@ -422,7 +585,7 @@ public class EditTextActivity extends AppCompatActivity {
     }
 
 
-    public Uri geturi(android.content.Intent intent) {
+    public Uri geturi(Intent intent) {
         Uri uri = intent.getData();
         String type = intent.getType();
         if (uri.getScheme().equals("file") && (type.contains("image/"))) {
@@ -434,7 +597,7 @@ public class EditTextActivity extends AppCompatActivity {
                 buff.append("(").append(MediaStore.Images.ImageColumns.DATA).append("=")
                         .append("'" + path + "'").append(")");
                 Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        new String[] { MediaStore.Images.ImageColumns._ID },
+                        new String[]{MediaStore.Images.ImageColumns._ID},
                         buff.toString(), null, null);
                 int index = 0;
                 for (cur.moveToFirst(); !cur.isAfterLast(); cur.moveToNext()) {
@@ -497,7 +660,7 @@ public class EditTextActivity extends AppCompatActivity {
         all = enter + enter + ss + enter + enter;
         edit.setSelection(start + all.length());
         for (int i = 0; i < all.length(); i++) {
-            recordFile.addContent(start + i, 0, all.charAt(i), wordsize, wordcolor);
+            recordFile.addContent(start + i, 0, all.charAt(i), wordsize, wordcolor,0);
         }
         edit.addTextChangedListener(textWatcher);
     }
@@ -603,8 +766,34 @@ public class EditTextActivity extends AppCompatActivity {
                     ss = new SpannableString(rp.c + "" + rp2.c);
                     ss.setSpan(new AbsoluteSizeSpan(rp.size, true), 0, ss.toString().length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     edit.append(ss);
-                } else {
+                }
+                else if(rp.type == 1){
+                    int s1,s2,s3,s4,special;
+                    special = rp.special;
+                    s1 = special%10;
+                    special/=10;
+                    s2 = special%10;
+                    special/=10;
+                    s3 = special%10;
+                    special/=10;
+                    s4 = special%10;
+                    special/=10;
                     ss = new SpannableString(rp.c + "");
+                    if(s1 == 1) {
+                        ss.setSpan(new UnderlineSpan(), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if(s2 == 1) {
+                        ss.setSpan(new StrikethroughSpan(), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    if(s3 == 1 && s4 == 1) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD_ITALIC), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else if(s3 == 1 && s4 == 0) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else if(s3 == 0 && s4 == 1) {
+                        ss.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
                     ss.setSpan(new ForegroundColorSpan(rp.color), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     ss.setSpan(new AbsoluteSizeSpan(rp.size, true), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     edit.append(ss);
@@ -640,6 +829,16 @@ public class EditTextActivity extends AppCompatActivity {
         wordcolor = color;
     }
 
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void setBG(int id) {
+        Resources res = getResources();
+        Drawable drawable = res.getDrawable(id);
+        layout.setBackground(drawable);
+        layout.getBackground().setAlpha(77);
+        bitmap = drawableToBitamp(layout.getBackground());
+    }
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -658,21 +857,47 @@ public class EditTextActivity extends AppCompatActivity {
 
     @Override
     public void onStart() {
-        super.onStart();
+        super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         //client.connect();
         //AppIndex.AppIndexApi.start(client, getIndexApiAction());
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.start(client, getIndexApiAction0());
     }
 
     @Override
     public void onStop() {
-        super.onStop();
+        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction0());
 
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         //AppIndex.AppIndexApi.end(client, getIndexApiAction());
         //client.disconnect();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.disconnect();
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction0() {
+        Thing object = new Thing.Builder()
+                .setName("EditText Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
     }
 }

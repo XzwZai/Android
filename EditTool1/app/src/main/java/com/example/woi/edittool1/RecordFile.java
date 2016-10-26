@@ -45,8 +45,8 @@ public class RecordFile {
         return ts;
     }
 
-    public void addContent(int i,int type,char c,int size,int color) {
-        content.add(i,new RecordPart(type,c,size,color));
+    public void addContent(int i,int type,char c,int size,int color,int special) {
+        content.add(i,new RecordPart(type,c,size,color,special));
     }
 
     public void deleteContent(int i) {
@@ -91,12 +91,13 @@ class RecordPart implements Serializable {
     public char c;
     public int size;
     public int color;
-
-    public RecordPart(int type,char c,int size,int color) {
+    public int special;
+    public RecordPart(int type,char c,int size,int color,int special) {
         this.type = type;
         this.color = color;
         this.c = c;
         this.size = size;
+        this.special = special;
     }
 
 }
